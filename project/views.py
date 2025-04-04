@@ -81,33 +81,33 @@ def join_project(request, project_id):
     
     # Check if project is submitted
     if project.is_submitted:
-        messages.error(request, "❌ This project has been submitted. You cannot join it anymore.")
+        messages.error(request, "Cannot join a project that has already been submitted.")
         return redirect("project:project_info", project_id=project.id)
     
     # Check if already requested
     existing_notification = Notification.objects.filter(
         project=project, 
-        sender=request.user,
+        sender=request.user,  # Check if current user has already sent a request
         notification_type='join_request'
     ).first()
     
     if existing_notification:
-        messages.warning(request, "⚠️ You have already sent a request to join this project. Please wait for the teacher's response.")
+        messages.error(request, "⚠️ You have already sent a request to join this project. Please wait for the teacher's response.")
         return redirect("project:project_info", project_id=project.id)
     
     try:
         # Create notification for teacher (project creator)
         Notification.objects.create(
-            user=project.created_by,
-            sender=request.user,
+            user=project.created_by,  # Send to project creator (teacher)
+            sender=request.user,      # Set the sender as the current user
             project=project,
-            message=f"📝 {request.user.get_full_name()} has requested to join your project '{project.title}'",
+            message=f"{request.user.username} has requested to join your project '{project.title}'",
             notification_type='join_request',
             status='pending'
         )
         messages.success(request, "✅ Your request to join the project has been sent successfully. The teacher will review it soon.")
     except Exception as e:
-        messages.error(request, f"❌ Error sending request: {str(e)}")
+        messages.error(request, f"Error sending request: {str(e)}")
     
     return redirect("project:project_info", project_id=project.id)
 
@@ -134,9 +134,9 @@ def handle_notification(request, notification_id, action):
         if notification.sender and notification.sender not in team.members.all():
             team.members.add(notification.sender)
             team.save()
-            messages.success(request, f"✅ {notification.sender.get_full_name()} has been added to the team successfully.")
+            messages.success(request, f"{notification.sender.get_full_name()} has been added to the team.")
         else:
-            messages.warning(request, f"⚠️ {notification.sender.get_full_name()} is already a member of the team.")
+            messages.warning(request, f"{notification.sender.get_full_name()} is already in the team.")
         
         # Update notification status
         notification.status = 'accepted'
@@ -146,11 +146,11 @@ def handle_notification(request, notification_id, action):
         Notification.objects.create(
             user=notification.sender,
             project=notification.project,
-            message=f"🎉 Congratulations! Your request to join '{notification.project.title}' has been accepted!",
+            message=f"Your request to join '{notification.project.title}' has been accepted!",
             notification_type='status_update',
             status='accepted'
         )
-        messages.success(request, "✅ Request accepted successfully.")
+        messages.success(request, "Request accepted successfully.")
     else:
         notification.status = 'rejected'
         notification.save()
@@ -159,11 +159,11 @@ def handle_notification(request, notification_id, action):
         Notification.objects.create(
             user=notification.sender,
             project=notification.project,
-            message=f"❌ Your request to join '{notification.project.title}' has been rejected by the teacher.",
+            message=f"Your request to join '{notification.project.title}' has been rejected.",
             notification_type='status_update',
             status='rejected'
         )
-        messages.warning(request, "⚠️ Request has been rejected.")
+        messages.warning(request, "Request rejected.")
     
     return redirect("project:project_info", project_id=notification.project.id)
 
@@ -251,7 +251,7 @@ def send_collaboration_request(request, project_id, student_id):
     
     # Check if project is submitted
     if project.is_submitted:
-        messages.error(request, "❌ This project has been submitted. You cannot send collaboration requests anymore.")
+        messages.error(request, "Cannot send collaboration requests for a submitted project.")
         return redirect("project:collaborate", project_id=project.id)
     
     # Get or create team
@@ -259,12 +259,12 @@ def send_collaboration_request(request, project_id, student_id):
     
     # Check if student is already in the team
     if student in team.members.all():
-        messages.warning(request, f"⚠️ {student.username} is already a member of this team.")
+        messages.warning(request, f"{student.username} is already a member of this team.")
         return redirect('project:collaborate', project_id=project.id)
     
     # Add student directly to team
     team.members.add(student)
-    messages.success(request, f"✅ {student.username} has been added to the team successfully.")
+    messages.success(request, f"{student.username} has been added to the team.")
     
     return redirect('project:collaborate', project_id=project.id)
 
@@ -276,7 +276,7 @@ def handle_collaboration_request(request, project_id, student_id, action):
     # Get team
     team = Team.objects.filter(project=project).first()
     if not team:
-        messages.error(request, "❌ Team not found.")
+        messages.error(request, "Team not found.")
         return redirect("project:collaborate", project_id=project.id)
     
     # Get the collaboration request
@@ -288,7 +288,7 @@ def handle_collaboration_request(request, project_id, student_id, action):
     ).first()
     
     if not collaboration_request:
-        messages.error(request, "❌ No collaboration request found.")
+        messages.error(request, "No collaboration request found.")
         return redirect("project:collaborate", project_id=project.id)
     
     if action == 'accept':
@@ -296,9 +296,9 @@ def handle_collaboration_request(request, project_id, student_id, action):
         if student not in team.members.all():
             team.members.add(student)
             team.save()
-            messages.success(request, f"✅ {student.get_full_name()} has been added to the team successfully.")
+            messages.success(request, f"{student.get_full_name()} has been added to the team.")
         else:
-            messages.warning(request, f"⚠️ {student.get_full_name()} is already a member of the team.")
+            messages.warning(request, f"{student.get_full_name()} is already in the team.")
         
         # Update notification status
         collaboration_request.status = 'accepted'
@@ -308,7 +308,7 @@ def handle_collaboration_request(request, project_id, student_id, action):
         Notification.objects.create(
             user=student,
             project=project,
-            message=f"🎉 Congratulations! Your request to join '{project.title}' has been accepted!",
+            message=f"Your request to join '{project.title}' has been accepted!",
             notification_type='status_update',
             status='accepted'
         )
@@ -320,11 +320,11 @@ def handle_collaboration_request(request, project_id, student_id, action):
         Notification.objects.create(
             user=student,
             project=project,
-            message=f"❌ Your request to join '{project.title}' has been rejected by the team leader.",
+            message=f"Your request to join '{project.title}' has been rejected.",
             notification_type='status_update',
             status='rejected'
         )
-        messages.warning(request, "⚠️ Request has been rejected.")
+        messages.warning(request, "Request rejected.")
     
     # If the request is AJAX, return JSON response
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -373,11 +373,11 @@ def submit_project_file(request, project_id):
     if request.method == 'POST':
         if 'project_file' in request.FILES:
             project.file = request.FILES['project_file']
-            project.is_submitted = True
+            project.is_submitted = True  # Mark as submitted
             project.save()
-            messages.success(request, "✅ Project file submitted successfully! The project is now marked as submitted.")
+            messages.success(request, "File submitted successfully!")
         else:
-            messages.error(request, "❌ Please select a file to upload.")
+            messages.error(request, "Please select a file to upload.")
     
     return redirect("project:your_projects")
 
@@ -402,19 +402,19 @@ def delete_project(request, project_id):
     
     # Check if user is a teacher (staff member)
     if not request.user.is_staff:
-        messages.error(request, "❌ Only teachers can delete projects.")
+        messages.error(request, "Only teachers can delete projects.")
         return redirect("project:project_info", project_id=project.id)
     
     # Check if project is submitted
     if not project.is_submitted:
-        messages.error(request, "❌ Only submitted projects can be deleted.")
+        messages.error(request, "Only submitted projects can be deleted.")
         return redirect("project:project_info", project_id=project.id)
     
     try:
         # Delete the project
         project.delete()
-        messages.success(request, "✅ Project deleted successfully. It has been removed from the project list and leaderboard.")
+        messages.success(request, "Project deleted successfully.")
     except Exception as e:
-        messages.error(request, f"❌ Error deleting project: {str(e)}")
+        messages.error(request, f"Error deleting project: {str(e)}")
     
     return redirect("project:project_list")
