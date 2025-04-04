@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Project List{% endblock %}
+
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'student_dashboard' %}">Home</a>
+        <a href="{% url 'project:student_projects' %}" class="active">Projects</a>
+        <a href="{% url 'project:your_projects' %}">Your Projects</a>
+    </nav>
+{% endblock %}
+
+{% block header %}Available Projects{% endblock %}
+
+{% block content %}
+    <div class="project-container">
+        {% for project in projects %}
+        <div class="project-card" onclick="location.href='{% url 'project:project_info' project.id %}'">
+            <h3>{{ project.title }}</h3>
+            <p><strong>Description:</strong> {{ project.description }}</p>
+            <p><strong>Deadline:</strong> {{ project.deadline }}</p>
+            <p><strong>Created By:</strong> {{ project.created_by.get_full_name|default:project.created_by.username }}</p>
+            
+            {% if project.file %}
+                <p><strong>File Submitted:</strong> <a href="{{ project.file.url }}" download>Download</a></p>
+                {% if project.score is not None %}
+                    <p><strong>Score:</strong> {{ project.score }}</p>
+                {% else %}
+                    <p><strong>Score:</strong> Not Evaluated Yet</p>
+                {% endif %}
+            {% else %}
+                <p style="color: red;">File has not been submitted yet.</p>
+            {% endif %}
+        </div>
+        
+        {% empty %}
+            <p>No projects available at the moment.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

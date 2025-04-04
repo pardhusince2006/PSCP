@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'teacher_dashboard'%}" class="active">Home</a>
+        <a href="{% url 'project:project_list' %}">Projects</a>
+        <a href="{% url 'project:create_project' %}">Create Project</a>
+    </nav>
+{% endblock %}
+<h1>{{ teacher.full_name }}</h1>
+{% block header %}Welcome, {{ teacher.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Teacher Dashboard</h2>
+
+    <!-- Leaderboard Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Leaderboard</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Rank</th>
+                        <th>Project Title</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in leaderboard_projects %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td> <!-- Rank -->
+                        <td>{{ project.title }}</td> <!-- Project Title -->
+                        <td>
+                            {% if project.score is not None %}
+                                {{ project.score }}/100
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Not Evaluated</span>
+                            {% endif %}
+                        </td> <!-- Score -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Other Teacher Dashboard Content -->
+</div>
+{% endblock %}

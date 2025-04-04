@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project{% endblock %}
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'teacher_dashboard'%}" >Home</a>
+        <a href="{% url 'project:project_list' %}">Projects</a>
+        <a href="{% url 'project:create_project' %}" class="active">Create Project</a>
+    </nav>
+{% endblock %}
+{% block content %}
+    <h2>Create a New Project</h2>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="{{ form.title.id_for_label }}">Title:</label>
+        {{ form.title }}
+
+        <label for="{{ form.description.id_for_label }}">Description:</label>
+        {{ form.description }}
+
+        <label for="{{ form.deadline.id_for_label }}">Deadline:</label>
+        {{ form.deadline }}
+
+        <button type="submit">Create Project</button>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            $(".datepicker").datepicker({ 
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true 
+            });
+        });
+    </script>
+{% endblock %}

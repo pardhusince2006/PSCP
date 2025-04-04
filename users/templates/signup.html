@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup Page</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #e7ecf3;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 320px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            text-align: left;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        input, select, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 10px;
+            background: #f1f1f1;
+            font-size: 0.9em;
+            outline: none;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus {
+            background: #e7e7e7;
+        }
+
+        button {
+            background: #5a67d8;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background: #4c51bf;
+            transform: scale(1.05);
+        }
+
+        #teacher-form { display: none; }
+
+        .error {
+            color: #d9534f;
+            font-size: 0.8em;
+            display: none;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        #role {
+            background: #f1f1f1;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+       function toggleForm() {
+    const role = document.getElementById('role').value;
+    const studentForm = document.getElementById('student-form');
+    const teacherForm = document.getElementById('teacher-form');
+
+    if (role === 'student') {
+        studentForm.style.display = 'block';
+        teacherForm.style.display = 'none';
+
+        // Enable student fields, disable teacher fields
+        studentForm.querySelectorAll('input, select').forEach(el => {
+            el.disabled = false;
+            el.removeAttribute('hidden');
+            el.setAttribute('required', 'true');
+        });
+
+        teacherForm.querySelectorAll('input, select').forEach(el => {
+            el.disabled = true;
+            el.setAttribute('hidden', 'true');
+            el.removeAttribute('required');
+        });
+
+    } else if (role === 'teacher') {
+        studentForm.style.display = 'none';
+        teacherForm.style.display = 'block';
+
+        // Enable teacher fields, disable student fields
+        teacherForm.querySelectorAll('input, select').forEach(el => {
+            el.disabled = false;
+            el.removeAttribute('hidden');
+            el.setAttribute('required', 'true');
+        });
+
+        studentForm.querySelectorAll('input, select').forEach(el => {
+            el.disabled = true;
+            el.setAttribute('hidden', 'true');
+            el.removeAttribute('required');
+        });
+    }
+}
+
+// Run toggleForm on load (in case the role is preselected)
+document.addEventListener('DOMContentLoaded', toggleForm);
+
+        function validateForm(event) {
+    const role = document.getElementById('role').value;
+    const password = document.getElementById(`${role}-password`).value;
+    const confirmPassword = document.getElementById(`${role}-confirmpassword`).value;
+
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        event.preventDefault();
+        return false;
+    }
+
+    alert('Form submitted successfully!');
+    return true;
+}
+
+    </script>
+</head>
+<body>
+    {% if messages %}
+    {% for message in messages %}
+        <div style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};">
+            {{ message }}<br>
+        </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'signup' %}" onsubmit="console.log('Form is submitted!');return validateForm(event)">
+        {% csrf_token %}
+        <h2>Signup Page</h2>
+        <label for="role">Signup as:</label>
+        <select id="role" name="role" onchange="toggleForm()">
+            <option value="student" selected>Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+
+        <div id="student-form">
+            <label for="student-name">Full Name</label>
+            <input type="text" id="student-name" name="student_name" required>
+    
+            <label for="student-email">Email</label>
+            <input type="email" id="student-email" name="student_email" required>
+    
+            <label for="student-roll">Roll Number / Student ID</label>
+            <input type="text" id="student-roll" name="student_roll" required>
+    
+            <label for="student-username">Username</label>
+            <input type="text" id="student-username" name="student-username" required>
+    
+            <label for="student-password">Password</label>
+            <input type="password" id="student-password" name="student-password" required>
+    
+            <label for="student-confirmpassword">Confirm Password</label>
+            <input type="password" id="student-confirmpassword" name="student-confirmpassword" required>
+    
+            <label for="student-dept">Course / Department</label>
+            <input type="text" id="student-dept" name="student_dept" required>
+    
+            <label for="student-year">Year of Study</label>
+            <select id="student-year" name="student_year">
+                <option value="1st">1st</option>
+                <option value="2nd">2nd</option>
+                <option value="3rd">3rd</option>
+                <option value="4th">4th</option>
+            </select>
+        </div>
+    
+        <div id="teacher-form">
+            <label for="teacher-name">Full Name</label>
+            <input type="text" id="teacher-name" name="teacher_name" required>
+    
+            <label for="teacher-id">Faculty ID / Employee ID</label>
+            <input type="text" id="teacher-id" name="teacher_id" required>
+    
+            <label for="teacher-username">Username</label>
+            <input type="text" id="teacher-username" name="teacher-username" required>
+    
+            <label for="teacher-password">Password</label>
+            <input type="password" id="teacher-password" name="teacher-password" required>
+    
+            <label for="teacher-confirmpassword">Confirm Password</label>
+            <input type="password" id="teacher-confirmpassword" name="teacher-confirmpassword" required>
+    
+            <label for="teacher-dept">Department</label>
+            <input type="text" id="teacher-dept" name="teacher_dept" required>
+    
+            <label for="teacher-designation">Designation</label>
+            <input type="text" id="teacher-designation" name="teacher_designation" required>
+        </div>
+    
+        <button type="submit">Signup</button>
+    </form>
+</body>
+</html>

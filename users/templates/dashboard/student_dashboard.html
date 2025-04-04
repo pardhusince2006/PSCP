@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'student_dashboard'%}" class="active">Home</a>
+        <a href="{% url 'project:student_projects'%}">Projects</a>
+        <a href="{% url 'project:your_projects'%}">Your Projects</a>
+    </nav>
+{% endblock %}
+<h1>{{ student.full_name }}</h1>
+{% block header %}Welcome, {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Student Dashboard</h2>
+
+    <!-- Leaderboard Section -->
+    <div class="card shadow-lg border-0 mb-4">
+        <div class="card-header bg-gradient text-white text-center py-3" style="background: linear-gradient(90deg, #007bff, #0056b3);">
+            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Leaderboard</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered text-center align-middle" style="border-radius: 10px; overflow: hidden;">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 10%;">Rank</th>
+                            <th style="width: 50%;">Project Title</th>
+                            <th style="width: 20%;">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in leaderboard_projects %}
+                        <tr class="{% if forloop.counter == 1 %}table-success{% elif forloop.counter == 2 %}table-info{% elif forloop.counter == 3 %}table-warning{% endif %}">
+                            <td><strong>{{ forloop.counter }}</strong></td> <!-- Rank -->
+                            <td>{{ project.title }}</td> <!-- Project Title -->
+                            <td>
+                                {% if project.score is not None %}
+                                    <span class="badge bg-success">{{ project.score }}/100</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Not Evaluated</span>
+                                {% endif %}
+                            </td> <!-- Score -->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other Student Dashboard Content -->
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Evaluate Project{% endblock %}
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'teacher_dashboard'%}" >Home</a>
+        <a href="{% url 'project:project_list' %}" class="active">Projects</a>
+        <a href="{% url 'project:create_project' %}">Create Project</a>
+    </nav>
+{% endblock %}
+{% block content %}
+<h2>Evaluate Project: {{ project.title }}</h2>
+
+{% if project.file %}
+    <p>📂 Submitted File: <a href="{{ project.file.url }}" target="_blank">Download</a></p>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Submit Score</button>
+    </form>
+{% else %}
+    <p class="text-danger">🚫 File is not submitted yet.</p>
+{% endif %}
+{% endblock %}

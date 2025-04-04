@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load project_extras %}
+{% block title %}Your Projects{% endblock %}
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'student_dashboard'%}" >Home</a>
+        <a href="{% url 'project:student_projects' %}" >Projects</a>
+        <a href="{% url 'project:your_projects' %}" class="active">Your Projects</a>
+    </nav>
+{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Applied Projects</h2>
+    
+    {% if projects %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for project in projects %}
+        <div class="col">
+            <div class="card h-100 shadow">
+                <div class="card-body">
+                    <h5 class="card-title">{{ project.title }}</h5>
+                    <p class="card-text">{{ project.description }}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-info">Deadline: {{ project.deadline }}</span>
+                        {% with team=project_teams|get_item:project.id %}
+                          {% if team %}
+                            <span class="badge bg-success ms-2">Team Status: {{ team.status }}</span>
+                          {% else %}
+                            <span class="badge bg-warning ms-2">Status: Not in team</span>
+                          {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <!-- File Upload Section -->
+                    {% if not project.is_submitted %}
+                    <form method="post" action="{% url 'project:submit_project_file' project.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="input-group mb-3">
+                            <input type="file" class="form-control" name="project_file" required>
+                            <button class="btn btn-primary" type="submit">
+                                Submit Project
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-success" disabled>Submitted</button>
+                    {% endif %}
+
+                    {% if project.file %}
+                    <div class="mt-2">
+                        <a href="{{ project.file.url }}" class="btn btn-outline-success btn-sm" download>
+                            Download Submitted File
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-3">
+        You haven't applied to any projects yet.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+    <title>Dashboard Clone</title>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>CREATIVE TIM</h1>
+        <nav>
+            <a href="#" class="active">Dashboard</a>
+            <a href="#">User Profile</a>
+            <a href="#">Table List</a>
+            <a href="#">Typography</a>
+            <a href="#">Icons</a>
+            <a href="#">Maps</a>
+            <a href="#">Notifications</a>
+        </nav>
+        <button class="upgrade">UPGRADE TO PRO</button>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h2>Dashboard</h2>
+            <div class="top-menu">
+                <a href="#">Stats</a>
+                <a href="#">5 Notifications</a>
+                <a href="#">Settings</a>
+            </div>
+        </header>
+
+        <section class="cards">
+            <div class="card">📀 Capacity <br> <strong>105GB</strong></div>
+            <div class="card">💵 Revenue <br> <strong>$1,345</strong></div>
+            <div class="card">📉 Errors <br> <strong>23</strong></div>
+            <div class="card">🐦 Followers <br> <strong>+45</strong></div>
+        </section>
+    </div>
+</body>
+</html>

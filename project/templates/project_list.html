@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Projects List{% endblock %}
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'teacher_dashboard'%}" >Home</a>
+        <a href="{% url 'project:project_list' %}" class="active">Projects</a>
+        <a href="{% url 'project:create_project' %}" >Create Project</a>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Projects List</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for project in projects %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ project.title }}</h5>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <p class="card-text text-muted">{{ project.description|truncatewords:20 }}</p>
+                    <p><strong>Deadline:</strong> {{ project.deadline }}</p>
+                    
+                    {% if project.file %}
+                        <!-- File Download -->
+                        <a href="{{ project.file.url }}" class="btn btn-outline-success btn-sm" download>
+                            📂 Download Submission
+                        </a>
+                        
+                        <!-- Score Evaluation Section -->
+                        {% if project.score is not None %}
+                            <!-- Evaluated Button -->
+                            <button class="btn btn-success mt-3" disabled>Evaluated</button>
+                            <div class="mt-2">
+                                <span class="badge bg-primary">Score: {{ project.score }}/100</span>
+                            </div>
+                        {% else %}
+                            <!-- Evaluate Form -->
+                            <form method="post" action="{% url 'project:evaluate_project' project.id %}" class="mt-3">
+                                {% csrf_token %}
+                                <div class="input-group" style="max-width: 300px;">
+                                    <input type="number" 
+                                           name="score" 
+                                           class="form-control" 
+                                           min="0" 
+                                           max="100" 
+                                           placeholder="Enter score (0-100)"
+                                           required>
+                                    <button type="submit" class="btn btn-primary">
+                                        Evaluate
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <!-- Not Submitted Badge -->
+                        <span class="badge bg-danger mt-3">🚫 Not Submitted</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not projects %}
+    <!-- No Projects Message -->
+    <div class="alert alert-info text-center mt-4">
+        No projects available at the moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Notifications</h3>
+                    {% if notifications %}
+                        <form method="post" action="{% url 'project:mark_all_read' %}" class="mb-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-check-double"></i> Mark All as Read
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if notifications %}
+                        <div class="notification-list">
+                            {% for notification in notifications %}
+                                <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                                    <div class="notification-message">
+                                        {% if notification.notification_type == 'join_request' %}
+                                            <i class="fas fa-user-plus icon-join"></i>
+                                        {% elif notification.notification_type == 'status_update' %}
+                                            {% if notification.status == 'accepted' %}
+                                                <i class="fas fa-check-circle icon-accepted"></i>
+                                            {% else %}
+                                                <i class="fas fa-times-circle icon-rejected"></i>
+                                            {% endif %}
+                                        {% elif notification.notification_type == 'submission' %}
+                                            <i class="fas fa-file-upload icon-submitted"></i>
+                                        {% endif %}
+                                        {{ notification.message }}
+                                    </div>
+                                    <div class="notification-timestamp">
+                                        <i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago
+                                    </div>
+                                    {% if notification.status == 'pending' and notification.notification_type == 'join_request' %}
+                                        <div class="notification-actions">
+                                            <form method="post" action="{% url 'project:handle_notification' notification.id 'accept' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-accept">
+                                                    <i class="fas fa-check"></i> Accept
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'project:handle_notification' notification.id 'reject' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-reject">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                    <span class="status-badge status-{{ notification.status }}">
+                                        {{ notification.status|title }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="notification-empty">
+                            <i class="far fa-bell-slash"></i>
+                            <p class="mb-0">No notifications yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .notification-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .notification-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .notification-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+    
+    .notification-item.unread {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+    }
+    
+    .notification-message {
+        font-size: 0.95rem;
+        color: #333;
+        margin-bottom: 5px;
+        padding-right: 100px;
+    }
+    
+    .notification-message i {
+        margin-right: 8px;
+        font-size: 1.1rem;
+    }
+    
+    .status-badge {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        z-index: 1;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-accepted {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .notification-timestamp {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .notification-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        padding-right: 100px;
+    }
+    
+    .notification-actions button {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+    
+    .notification-actions button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .notification-empty {
+        text-align: center;
+        padding: 30px;
+        color: #6c757d;
+    }
+    
+    .notification-empty i {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #dee2e6;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block title %}Collaborate - {{ project.title }}{% endblock %}
+
+{% block sidebar %}
+    <nav>
+        <a href="{% url 'student_dashboard' %}">Home</a>
+        <a href="{% url 'project:student_projects' %}">Projects</a>
+        <a href="#">Your Projects</a>
+    </nav>
+{% endblock %}
+
+{% block header %}Collaborate - {{ project.title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Team Members</h3>
+    </div>
+    <div class="card-body">
+        <div class="team-members">
+            {% if team %}
+                {% for member in team_members %}
+                    <div class="team-member-item">
+                        <div class="member-info">
+                            <h4>{{ member.username}}</h4>
+                            <p>{{ member.email }}</p>
+                            <span class="status-badge status-{{ team.status|lower }}">
+                                {{ team.status }}
+                            </span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No team members yet.</p>
+                {% endfor %}
+            {% else %}
+                <p>No team created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Available Students</h3>
+    </div>
+    <div class="card-body">
+        <div class="students-list">
+            {% if students %}
+                {% for student in students %}
+                    <div class="student-item">
+                        <div class="student-info">
+                            <h4>{{ student.username }}</h4>
+                            <p>{{ student.email }}</p>
+                        </div>
+                        {% if team %}
+                            {% if student in team.members.all %}
+                                <span class="status-badge status-{{ team.status|lower }}">
+                                    {{ team.status }}
+                                </span>
+                            {% else %}
+                                <a href="{% url 'project:send_collaboration_request' project.id student.id %}" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Add to Team
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'project:send_collaboration_request' project.id student.id %}" class="btn btn-primary">
+                                <i class="fas fa-user-plus"></i> Add to Team
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No available students.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if all_processed %}
+    <div class="text-center mt-4">
+        <a href="{% url 'project:start_project' project.id %}" class="btn btn-success btn-lg">
+            <i class="fas fa-play"></i> Start Project
+        </a>
+    </div>
+{% endif %}
+
+<style>
+    .team-members, .students-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .team-member-item, .student-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: white;
+    }
+    
+    .member-info, .student-info {
+        flex: 1;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 0.9em;
+        margin-left: 8px;
+    }
+    
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d4edda; color: #155724; }
+    .status-rejected { background: #f8d7da; color: #721c24; }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+    
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+        border: none;
+    }
+    
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+</style>
+{% endblock %} 
