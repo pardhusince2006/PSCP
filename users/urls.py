@@ -5,6 +5,7 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path('', lambda request: redirect('login'), name='root'),
     path('login/', views.login_view, name='login'),
     path('signup/',views.signup_view, name='signup'),
     path('dashboard/', views.redirect_dashboard, name='redirect_dashboard'),

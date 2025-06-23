@@ -1,0 +1,103 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install gunicorn
+    
+    - name: Check environment variables
+      run: |
+        if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+          echo "DATABASE_URL is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.DJANGO_SECRET_KEY }}" ]; then
+          echo "DJANGO_SECRET_KEY is not set"
+          exit 1
+        fi
+    
+    - name: Run database migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        DJANGO_SETTINGS_MODULE: PSCP.settings
+      run: |
+        python manage.py check --deploy
+        python manage.py migrate
+    
+    - name: Collect static files
+      run: |
+        python manage.py collectstatic --noinput
+    
+    - name: Run security checks
+      run: |
+        pip install safety bandit
+        safety check
+        bandit -r .
+    
+    - name: Deploy to Heroku
+      if: github.event.inputs.environment == 'production' || github.ref == 'refs/heads/main'
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+        heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
+        heroku_email: ${{secrets.HEROKU_EMAIL}}
+        branch: main
+        dontuseforce: true
+        usedocker: false
+        appdir: .
+        procfile: Procfile
+    
+    - name: Deploy to Staging
+      if: github.event.inputs.environment == 'staging'
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{secrets.HEROKU_STAGING_API_KEY}}
+        heroku_app_name: ${{secrets.HEROKU_STAGING_APP_NAME}}
+        heroku_email: ${{secrets.HEROKU_EMAIL}}
+        branch: main
+        dontuseforce: true
+        usedocker: false
+        appdir: .
+        procfile: Procfile
+    
+    - name: Verify deployment
+      run: |
+        curl -s ${{ secrets.APP_URL }}/health/ | grep "ok" || exit 1 

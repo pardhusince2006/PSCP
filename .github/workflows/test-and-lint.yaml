@@ -2,16 +2,19 @@ name: Test and Lint
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        django-version: ["4.2", "5.0", "5.1", "5.2"]
+      fail-fast: false
 
     services:
       postgres:
@@ -35,24 +38,37 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov flake8 black
+        pip install pytest pytest-cov flake8 black isort pytest-django pytest-xdist
+        pip install "Django==${{ matrix.django-version }}"
 
     - name: Run tests with coverage
       env:
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+        DJANGO_SECRET_KEY: test_secret_key
+        DJANGO_SETTINGS_MODULE: PSCP.settings
       run: |
-        python -m pytest --cov=users --cov=project tests/ -v
+        python -m pytest --cov=users --cov=project --cov-report=xml --cov-report=term-missing tests/ -v -n auto
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest
@@ -62,16 +78,41 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install linting tools
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 
+        pip install flake8 black isort mypy pylint
 
     - name: Run flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run black
+      run: |
+        black . --check
+
+    - name: Run isort
+      run: |
+        isort . --check-only
+
+    - name: Run mypy
+      run: |
+        mypy .
+
+    - name: Run pylint
+      run: |
+        pylint users project
 
   
